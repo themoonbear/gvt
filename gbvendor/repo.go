@@ -58,7 +58,7 @@ var (
 // Remote repositories can be bare import paths, or urls including a checkout scheme.
 // If deduction would cause traversal of an insecure host, a message will be
 // printed and the travelsal path will be ignored.
-func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
+func DeduceRemoteRepo(path string, insecure bool, repository ...string) (RemoteRepo, string, error) {
 	u, err := url.Parse(path)
 	if err != nil {
 		return nil, "", fmt.Errorf("%q is not a valid import path", path)
@@ -160,6 +160,19 @@ func DeduceRemoteRepo(path string, insecure bool) (RemoteRepo, string, error) {
 	if err != nil {
 		return nil, "", err
 	}
+
+	// googlesource 被墙
+	if strings.Contains(reporoot, "googlesource.com") {
+		if len(repository) > 0 {
+			reporoot = repository[0]
+		} else {
+			golangX := "golang.org/x"
+			if strings.Contains(importpath, golangX) {
+				reporoot = "https://github.com/golang" + importpath[len(golangX):]
+			}
+		}
+	}
+
 	u, err = url.Parse(reporoot)
 	if err != nil {
 		return nil, "", err

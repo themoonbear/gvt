@@ -7,7 +7,7 @@ import (
 
 	"github.com/constabulary/gb/fileutils"
 
-	"github.com/FiloSottile/gvt/gbvendor"
+	"github.com/polaris1119/gvt/gbvendor"
 )
 
 var (
@@ -71,7 +71,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted from manifest: %v", err)
 			}
 
-			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure)
+			repo, extra, err := vendor.DeduceRemoteRepo(d.Importpath, insecure, d.Repository)
 			if err != nil {
 				return fmt.Errorf("could not determine repository for import %q", d.Importpath)
 			}

@@ -9,8 +9,8 @@ import (
 	"sync"
 	"sync/atomic"
 
-	"github.com/FiloSottile/gvt/gbvendor"
 	"github.com/constabulary/gb/fileutils"
+	"github.com/polaris1119/gvt/gbvendor"
 )
 
 var (
@@ -97,7 +97,7 @@ func downloadDependency(dep vendor.Dependency, errors *uint32, vendorDir string,
 		log.Printf("fetching %s", dep.Importpath)
 	}
 
-	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure)
+	repo, _, err := vendor.DeduceRemoteRepo(dep.Importpath, rbInsecure, dep.Repository)
 	if err != nil {
 		return fmt.Errorf("dependency could not be processed: %s", err)
 	}
