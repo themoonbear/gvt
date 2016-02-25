@@ -155,21 +155,27 @@ func DeduceRemoteRepo(path string, insecure bool, repository ...string) (RemoteR
 		}
 	}
 
-	// no idea, try to resolve as a vanity import
-	importpath, vcs, reporoot, err := ParseMetadata(path, insecure)
-	if err != nil {
-		return nil, "", err
-	}
+	var importpath, vcs, reporoot string
 
+	// golang.org 被墙
+	golangX := "golang.org/x"
 	if len(repository) > 0 {
-		reporoot = repository[0]
+		importpath, vcs, reporoot = path, "git", repository[0]
+	} else if strings.Contains(path, golangX) {
+		importpath, vcs, reporoot = path, "git", "https://github.com/golang/"
+
+		githubPath := importpath[len(golangX)+1:]
+		pos := strings.Index(githubPath, "/")
+		if pos == -1 {
+			reporoot += githubPath
+		} else {
+			reporoot += githubPath[:pos]
+		}
 	} else {
-		// googlesource 被墙
-		if strings.Contains(reporoot, "googlesource.com") {
-			golangX := "golang.org/x"
-			if strings.Contains(importpath, golangX) {
-				reporoot = "https://github.com/golang" + importpath[len(golangX):]
-			}
+		// no idea, try to resolve as a vanity import
+		importpath, vcs, reporoot, err = ParseMetadata(path, insecure)
+		if err != nil {
+			return nil, "", err
 		}
 	}
 
