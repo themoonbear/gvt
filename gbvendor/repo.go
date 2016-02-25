@@ -161,11 +161,11 @@ func DeduceRemoteRepo(path string, insecure bool, repository ...string) (RemoteR
 		return nil, "", err
 	}
 
-	// googlesource 被墙
-	if strings.Contains(reporoot, "googlesource.com") {
-		if len(repository) > 0 {
-			reporoot = repository[0]
-		} else {
+	if len(repository) > 0 {
+		reporoot = repository[0]
+	} else {
+		// googlesource 被墙
+		if strings.Contains(reporoot, "googlesource.com") {
 			golangX := "golang.org/x"
 			if strings.Contains(importpath, golangX) {
 				reporoot = "https://github.com/golang" + importpath[len(golangX):]
