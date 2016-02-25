@@ -2,6 +2,8 @@
 [![GoDoc](https://godoc.org/github.com/FiloSottile/gvt?status.svg)](https://godoc.org/github.com/FiloSottile/gvt)
 [![Build Status](https://travis-ci.org/FiloSottile/gvt.svg?branch=master)](https://travis-ci.org/FiloSottile/gvt)
 
+*本 fork 解决了国内 golang.org/x/net 之类的 package 被墙的问题*
+
 `gvt` is a simple Go vendoring tool made for the
 [GO15VENDOREXPERIMENT](https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit),
 based on [gb-vendor](https://github.com/constabulary/gb).
