@@ -170,6 +170,7 @@ func DeduceRemoteRepo(path string, insecure bool, repository ...string) (RemoteR
 			reporoot += githubPath
 		} else {
 			reporoot += githubPath[:pos]
+			importpath = golangX + "/" + githubPath[:pos]
 		}
 	} else {
 		// no idea, try to resolve as a vanity import
