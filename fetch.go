@@ -71,6 +71,8 @@ Flags:
 	AddFlags: addFetchFlags,
 }
 
+var AlreadyErr = fmt.Errorf("alread vendored")
+
 func fetch(path string, recurse bool) error {
 	m, err := vendor.ReadManifest(manifestFile())
 	if err != nil {
@@ -87,7 +89,8 @@ func fetch(path string, recurse bool) error {
 	path = stripscheme(path)
 
 	if m.HasImportpath(path) {
-		return fmt.Errorf("%s is already vendored", path)
+		log.Printf("%s is already vendored", path)
+		return AlreadyErr
 	}
 
 	wc, err := repo.Checkout(branch, tag, revision)
@@ -143,6 +146,7 @@ func fetch(path string, recurse bool) error {
 	tag = ""
 	revision = ""
 
+ForLoop:
 	for done := false; !done; {
 
 		paths := []struct {
@@ -181,6 +185,9 @@ func fetch(path string, recurse bool) error {
 			pkg := keys[0]
 			log.Printf("fetching recursive dependency %s", pkg)
 			if err := fetch(pkg, false); err != nil {
+				if err == AlreadyErr {
+					break ForLoop
+				}
 				return err
 			}
 		}
