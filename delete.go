@@ -7,7 +7,7 @@ import (
 
 	"github.com/constabulary/gb/fileutils"
 
-	"github.com/polaris1119/gvt/gbvendor"
+	"github.com/themoonbear/gvt/gbvendor"
 )
 
 var (
@@ -16,17 +16,20 @@ var (
 
 func addDeleteFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&deleteAll, "all", false, "delete all dependencies")
+	fs.BoolVar(&global, "g", false, "install package in go env $GOPATH")
 }
 
 var cmdDelete = &Command{
 	Name:      "delete",
-	UsageLine: "delete [-all] importpath",
+	UsageLine: "delete [-all | -g] importpath",
 	Short:     "delete a local dependency",
 	Long: `delete removes a dependency from the vendor directory and the manifest
 
 Flags:
 	-all
 		remove all dependencies
+	-g global
+		install package in go env $GOPATH
 
 `,
 	Run: func(args []string) error {
@@ -61,7 +64,7 @@ Flags:
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(path))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(vendorDir(global), filepath.FromSlash(path))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove indermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}

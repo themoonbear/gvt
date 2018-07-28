@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var fs = flag.NewFlagSet(os.Args[0], flag.ContinueOnError)
@@ -77,8 +78,21 @@ func main() {
 
 const manifestfile = "manifest"
 
-func vendorDir() string {
-	wd, err := os.Getwd()
+func vendorDir(global bool) string {
+	var wd string
+	var err error
+
+	if global {
+		out := os.Getenv("GOPATH")
+		if out == "" {
+			log.Fatal("GOPATH 未定义")
+		}else{
+			tmp := strings.Split(out, ":")
+			wd = tmp[len(tmp)-1]
+			return filepath.Join(wd, "src")
+		}
+	}
+	wd, err = os.Getwd()
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -86,5 +100,9 @@ func vendorDir() string {
 }
 
 func manifestFile() string {
-	return filepath.Join(vendorDir(), manifestfile)
+	wd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	return filepath.Join(wd, manifestfile)
 }

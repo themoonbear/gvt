@@ -10,7 +10,7 @@ import (
 	"sync/atomic"
 
 	"github.com/constabulary/gb/fileutils"
-	"github.com/polaris1119/gvt/gbvendor"
+	"github.com/themoonbear/gvt/gbvendor"
 )
 
 var (
@@ -21,11 +21,12 @@ var (
 func addRestoreFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&rbInsecure, "precaire", false, "allow the use of insecure protocols")
 	fs.UintVar(&rbConnections, "connections", 8, "count of parallel download connections")
+	fs.BoolVar(&global, "g", false, "install package in go env $GOPATH")
 }
 
 var cmdRestore = &Command{
 	Name:      "restore",
-	UsageLine: "restore [-precaire] [-connections N]",
+	UsageLine: "restore [-precaire] [-connections N] [-g]",
 	Short:     "restore dependencies from manifest",
 	Long: `restore fetches the dependencies listed in the manifest.
 
@@ -33,7 +34,6 @@ It's meant for workflows that don't include checking in to VCS the vendored
 source, for example if .gitignore includes lines like
 
     vendor/**
-    !vendor/manifest
 
 Note that such a setup requires "gvt restore" to build the source, relies on
 the availability of the dependencies repositories and breaks "go get".
@@ -43,11 +43,13 @@ Flags:
 		allow the use of insecure protocols.
 	-connections
 		count of parallel download connections.
+	-g global
+		install package in go env $GOPATH
 `,
 	Run: func(args []string) error {
 		switch len(args) {
 		case 0:
-			return restore(manifestFile())
+			return restore(manifestFile(), global)
 		default:
 			return fmt.Errorf("restore takes no arguments")
 		}
@@ -55,7 +57,7 @@ Flags:
 	AddFlags: addRestoreFlags,
 }
 
-func restore(manFile string) error {
+func restore(manFile string, global bool) error {
 	m, err := vendor.ReadManifest(manFile)
 	if err != nil {
 		return fmt.Errorf("could not load manifest: %v", err)
@@ -69,7 +71,7 @@ func restore(manFile string) error {
 		go func() {
 			defer wg.Done()
 			for d := range depC {
-				if err := downloadDependency(d, &errors, vendorDir(), false); err != nil {
+				if err := downloadDependency(d, &errors, vendorDir(global), false); err != nil {
 					log.Printf("%s: %v", d.Importpath, err)
 					atomic.AddUint32(&errors, 1)
 				}

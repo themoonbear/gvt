@@ -11,7 +11,7 @@ import (
 	"sort"
 
 	"github.com/constabulary/gb/fileutils"
-	"github.com/polaris1119/gvt/gbvendor"
+	"github.com/themoonbear/gvt/gbvendor"
 )
 
 var (
@@ -22,6 +22,7 @@ var (
 	insecure  bool // Allow the use of insecure protocols
 
 	recurse bool // should we fetch recursively
+	global bool // install package in go env $GOPATH
 )
 
 func addFetchFlags(fs *flag.FlagSet) {
@@ -30,11 +31,12 @@ func addFetchFlags(fs *flag.FlagSet) {
 	fs.StringVar(&tag, "tag", "", "tag of the package")
 	fs.BoolVar(&noRecurse, "no-recurse", false, "do not fetch recursively")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.BoolVar(&global, "g", false, "install package in go env $GOPATH")
 }
 
 var cmdFetch = &Command{
 	Name:      "fetch",
-	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] importpath",
+	UsageLine: "fetch [-branch branch] [-revision rev | -tag tag] [-precaire] [-no-recurse] [-g] importpath",
 	Short:     "fetch a remote dependency",
 	Long: `fetch vendors an upstream import path.
 
@@ -54,6 +56,8 @@ Flags:
 		If no revision supplied, the latest available will be fetched.
 	-precaire
 		allow the use of insecure protocols.
+	-g global
+		install package in go env $GOPATH
 
 `,
 	Run: func(args []string) error {
@@ -63,7 +67,7 @@ Flags:
 		case 1:
 			path := args[0]
 			recurse = !noRecurse
-			return fetch(path, recurse)
+			return fetch(path, recurse, global)
 		default:
 			return fmt.Errorf("more than one import path supplied")
 		}
@@ -73,7 +77,7 @@ Flags:
 
 var AlreadyErr = fmt.Errorf("alread vendored")
 
-func fetch(path string, recurse bool) error {
+func fetch(path string, recurse, global bool) error {
 	m, err := vendor.ReadManifest(manifestFile())
 	if err != nil {
 		return fmt.Errorf("could not load manifest: %v", err)
@@ -121,7 +125,7 @@ func fetch(path string, recurse bool) error {
 		return err
 	}
 
-	dst := filepath.Join(vendorDir(), dep.Importpath)
+	dst := filepath.Join(vendorDir(global), dep.Importpath)
 	src := filepath.Join(wc.Dir(), dep.Path)
 
 	if err := fileutils.Copypath(dst, src); err != nil {
@@ -159,7 +163,7 @@ ForLoop:
 			return err
 		}
 		for _, d := range m.Dependencies {
-			paths = append(paths, struct{ Root, Prefix string }{filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath)), filepath.FromSlash(d.Importpath)})
+			paths = append(paths, struct{ Root, Prefix string }{filepath.Join(vendorDir(global), filepath.FromSlash(d.Importpath)), filepath.FromSlash(d.Importpath)})
 		}
 
 		dsm, err := vendor.LoadPaths(paths...)
@@ -167,7 +171,7 @@ ForLoop:
 			return err
 		}
 
-		is, ok := dsm[filepath.Join(vendorDir(), path)]
+		is, ok := dsm[filepath.Join(vendorDir(global), path)]
 		if !ok {
 			return fmt.Errorf("unable to locate depset for %q", path)
 		}
@@ -184,7 +188,7 @@ ForLoop:
 			sort.Strings(keys)
 			pkg := keys[0]
 			log.Printf("fetching recursive dependency %s", pkg)
-			if err := fetch(pkg, false); err != nil {
+			if err := fetch(pkg, false, global); err != nil {
 				if err == AlreadyErr {
 					break ForLoop
 				}

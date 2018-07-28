@@ -4,6 +4,10 @@
 
 *本 fork 解决了国内 golang.org/x/net 之类的 package 被墙的问题*
 
+*本 fork 为各命令添加 -g 参数，将依赖包安装在 go env $GOPATH 中*
+
+*本 fork 将依赖包描述文件存在执行 gvt 命令当前目录下*
+
 `gvt` is a simple Go vendoring tool made for the
 [GO15VENDOREXPERIMENT](https://docs.google.com/document/d/1Bz5-UB7g2uPBdOx-rw5t9MxJwkfpx90cqG9AFL0JAYo/edit),
 based on [gb-vendor](https://github.com/constabulary/gb).

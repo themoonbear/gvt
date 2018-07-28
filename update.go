@@ -7,7 +7,7 @@ import (
 
 	"github.com/constabulary/gb/fileutils"
 
-	"github.com/polaris1119/gvt/gbvendor"
+	"github.com/themoonbear/gvt/gbvendor"
 )
 
 var (
@@ -17,11 +17,12 @@ var (
 func addUpdateFlags(fs *flag.FlagSet) {
 	fs.BoolVar(&updateAll, "all", false, "update all dependencies")
 	fs.BoolVar(&insecure, "precaire", false, "allow the use of insecure protocols")
+	fs.BoolVar(&global, "g", false, "install package in go env $GOPATH")
 }
 
 var cmdUpdate = &Command{
 	Name:      "update",
-	UsageLine: "update [ -all | importpath ]",
+	UsageLine: "update [ -all | -g| importpath ]",
 	Short:     "update a local dependency",
 	Long: `update replaces the source with the latest available from the head of the fetched branch.
 
@@ -38,6 +39,8 @@ Flags:
 		update all dependencies in the manifest.
 	-precaire
 		allow the use of insecure protocols.
+	-g global
+		install package in go env $GOPATH
 
 `,
 	Run: func(args []string) error {
@@ -99,12 +102,12 @@ Flags:
 				Path:       extra,
 			}
 
-			if err := fileutils.RemoveAll(filepath.Join(vendorDir(), filepath.FromSlash(d.Importpath))); err != nil {
+			if err := fileutils.RemoveAll(filepath.Join(vendorDir(global), filepath.FromSlash(d.Importpath))); err != nil {
 				// TODO(dfc) need to apply vendor.cleanpath here to remove intermediate directories.
 				return fmt.Errorf("dependency could not be deleted: %v", err)
 			}
 
-			dst := filepath.Join(vendorDir(), filepath.FromSlash(dep.Importpath))
+			dst := filepath.Join(vendorDir(global), filepath.FromSlash(dep.Importpath))
 			src := filepath.Join(wc.Dir(), dep.Path)
 
 			if err := fileutils.Copypath(dst, src); err != nil {
